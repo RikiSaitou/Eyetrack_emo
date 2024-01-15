@@ -10,6 +10,7 @@
 import processing.serial.*;
 Serial port;
 int in_data;
+
 int opened;
 int closed;
 int closureTime;         // 閉眼時間を格納する変数
@@ -18,6 +19,8 @@ float closureRate;        // 閉眼率
 int unitTime = 10000;     // 10秒ごとに数字を更新
 int oldTime;
 String c = "wait";
+int flag;
+int preFlag;
 
 // actuation value
 int lastTime;  
@@ -39,7 +42,7 @@ int concentrationRateThreshouldForActutation = 50;
 void setup() {
   size(400, 180);
   frameRate(60);
-  //port = new Serial(this, "/dev/ttyACM0", 9600);
+  port = new Serial(this, "/dev/cu.usbmodem144401", 115200); //usb名は環境に応じて適宜変更
   closureTime = 0;
   totalClosureTime = 0;
   oldTime = millis();
@@ -53,32 +56,39 @@ void draw() {
   textSize(30);
   text("Concentration level", 50, 50);
   textSize(80);
-  text("%", 300, 140);
+  text("%", 300, 140); //FIXME　値を調整して
   
   if (port.available() > 0 ) {
     // シリアルデータ受信
     in_data = port.read();
   }
   
-  if (in_data == 0) {
+  preFlag = flag;
+  if (flag == 0 && in_data == 0) {
     closed = millis();
-  } else if (in_data == 1) {
+    flag = 1;
+    println("close");
+  }
+  if (flag == 1 && in_data == 1) {
     opened = millis();
+    flag = 0;
+    println("open");
   }
   
-  //　集中度の計算処理を開始
-  closureTime = opened - closed; //閉眼時間を取得(開眼時の時間-閉眼時の時間)
-
-  if (closureTime > 150) {//閉眼時間が150ms以上ならtotalの閉眼時間として足す
+  if(opened > closed)
+  {
+    closureTime = opened - closed; //閉眼時間を取得(開眼時の時間-閉眼時の時間)
+  }
+  
+  if (closureTime > 150 && preFlag == 1 && flag == 0) {//閉眼時間が150ms以上ならtotalの閉眼時間として足す
     totalClosureTime += closureTime;
   }
-  
-  if (millis() - oldTime > unitTime) { // unitTimeごとの 閉眼率 = totalの閉眼時間/一定時間　を計算
+  if (millis() - oldTime > unitTime) {// unitTimeごとの 閉眼率 = totalの閉眼時間/一定時間　を計算
     closureRate = (float) totalClosureTime / unitTime;
     oldTime = millis();
     totalClosureTime = 0; //初期化
-
-    //分類3 固定値0%, 25%, 50%, 75%, 100%したもの
+    
+    //0%, 25%, 50%, 75%, 100%に分類
     concentrationRate = 0;
     if (closureRate >= 0.10) {
       concentrationRate = 25;
@@ -138,5 +148,11 @@ void draw() {
         }
       }
     }
+  }
+  else{
+    //Actuation機能がない場合，concentrationRateを恒常的に表示
+    fill(0);
+    textSize(90);
+    text(str(concentrationRate), 100, 140);  // 新たなテキスト位置
   }
 }
