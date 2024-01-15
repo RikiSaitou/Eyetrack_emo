@@ -26,11 +26,10 @@ int preFlag;
 int lastTime;  
 boolean isTextVisible = true;  
 int flashingTime = 300; //flashing interval (millis)
-int concentrationValue = 40; //集中度
-
 int fadeDuration = 5000;  // フェードアウト及びフェードインにかける時間（ミリ秒）(5秒使って描画する)
 int alphaValueOut = 255;  // フェードアウトするテキストの初期アルファ値（完全に不透明）
 int alphaValueIn = 0;  // フェードインするテキストの初期アルファ値（完全に透明）
+int lastconcentrationRate = 0; //Morphingの遷移の際の対として必要
 
 // integration value
 boolean isActuation = false;
@@ -109,6 +108,7 @@ void draw() {
   if(isActuation){
     if (millis() - actuationStartTime > actuationDuration) {
       isActuation = false;
+      lastconcentrationRate = concentrationRate;
     } else {
       // アクチュエーション継続中の描画処理
       if(concentrationRate > concentrationRateThreshouldForActutation){
@@ -129,7 +129,7 @@ void draw() {
         // フェードアウトするテキストを描画
         fill(0, alphaValueOut);
         textSize(90);
-        text(str(concentrationRate), 100, 140);
+        text(str(lastconcentrationRate), 100, 140);
         // フェードインするテキストを描画
         fill(0, alphaValueIn);
         textSize(90);
