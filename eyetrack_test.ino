@@ -36,25 +36,25 @@ void loop() {
       delay(40);
       LR = i;
     }
-    Serial.println("右");
+    //Serial.println("右");
   }else if(rasioL < 0.985 && rasioR > 0.985){ //左
     for(int i=LR; i>2; i--){
       delay(40);
       LR = i;
     }
-    Serial.println("左");
+    //Serial.println("左");
   }else if(lid == false && rasioL < 0.96 && rasioR < 0.96){ //瞬き閉じ動作
     for(int i = 1; i < 9; i++){
       delay(40);
       lid = true;
     }
-    Serial.println("瞬き閉じ動作");
+    Serial.println(0);
   }else if(lid == true && rasioL > 0.96 && rasioR > 0.96){ //瞬き開き動作
     for(int i = 8; i > 0; i--){
       delay(40);
       lid = false;
     }
-    Serial.println("瞬き開き動作");
+    Serial.println(1);
   }else if(lid == false && rasioL > 0.96 && rasioR > 0.96) {   //通常時
     //cnt++;
     //eyelid = 0;
@@ -69,7 +69,7 @@ void loop() {
         LR = i;
       }
     }
-    Serial.println("通常時");
+    //Serial.println("通常時");
   }
   
   //初期値リフレッシュ
