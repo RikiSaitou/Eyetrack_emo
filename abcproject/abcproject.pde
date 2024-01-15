@@ -5,7 +5,7 @@
  閉眼率が0.1以下なら集中している。
  参考: 3.2節 https://www.jstage.jst.go.jp/article/sicejl/55/3/55_259/_pdf
  シリアル通信のコード参考: https://l-w-i.net/t/arduino/processing_001.txt
- */
+*/
 
 import processing.serial.*;
 Serial port;
@@ -24,8 +24,6 @@ int lastTime;
 boolean isTextVisible = true;  
 int flashingTime = 300; //flashing interval (millis)
 int concentrationValue = 40; //集中度
-
-int startTime = 10000;  // 開始時間 これなんの時間？FIX ME
 
 int fadeDuration = 5000;  // フェードアウト及びフェードインにかける時間（ミリ秒）(5秒使って描画する)
 int alphaValueOut = 255;  // フェードアウトするテキストの初期アルファ値（完全に不透明）
@@ -105,7 +103,7 @@ void draw() {
       // アクチュエーション継続中の描画処理
       if(concentrationRate > concentrationRateThreshouldForActutation){
         // モーフィング
-        int elapsedTime = millis() - startTime;
+        int elapsedTime = millis() - actuationStartTime;
         if (elapsedTime < fadeDuration) {// フェードアウトするテキストの透明度を計算
           alphaValueOut = 255 - int(255.0 * elapsedTime / fadeDuration);
         } 
