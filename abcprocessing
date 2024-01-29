@@ -1,0 +1,109 @@
+/*
+閉眼時間を取得(開眼時の時間-閉眼時の時間)
+ 閉眼時間が150ms以上ならtotalの閉眼時間として足す
+ unitTimeごとの 閉眼率 = totalの閉眼時間/一定時間　を計算
+ 閉眼率が0.1以下なら集中している。
+ 参考: 3.2節 https://www.jstage.jst.go.jp/article/sicejl/55/3/55_259/_pdf
+ シリアル通信のコード参考: https://l-w-i.net/t/arduino/processing_001.txt
+ */
+
+
+import processing.serial.*;
+Serial port;
+int in_data;
+
+int opened;
+int closed;
+int closureTime;         // 閉眼時間を格納する変数
+int totalClosureTime;     // total閉眼時間
+float closureRate;        // 閉眼率
+int unitTime = 10000;     // 10秒ごとに数字を更新
+int oldTime;
+String c = "wait";
+int flag;
+int preFlag;
+
+void setup() {
+  size(400, 180);
+  port = new Serial(this, "/dev/cu.usbmodem144401", 115200);
+  closureTime = 0;
+  totalClosureTime = 0;
+  oldTime = millis();
+}
+
+void draw() {
+  // permanently visible
+  background(255);
+  fill(0);
+  textSize(30);
+  text("Concentration level", 50, 50);
+  textSize(90);
+  text(c, 100, 140);
+
+  if (port.available() > 0 ) {
+    // シリアルデータ受信
+    in_data = port.read();
+    
+  }
+  preFlag = flag;
+  if (flag == 0 && in_data == 0) {
+    closed = millis();
+    flag = 1;
+    println("close");
+  }
+  if (flag == 1 && in_data == 1) {
+    opened = millis();
+    flag = 0;
+    println("open");
+  }
+  
+  if(opened > closed)
+  {
+    closureTime = opened - closed; //閉眼時間を取得(開眼時の時間-閉眼時の時間)
+  }
+  
+  if (closureTime > 150 && preFlag == 1 && flag == 0) {//閉眼時間が150ms以上ならtotalの閉眼時間として足す
+    totalClosureTime += closureTime;
+  }
+  if (millis() - oldTime > unitTime) {// unitTimeごとの 閉眼率 = totalの閉眼時間/一定時間　を計算
+    closureRate = (float) totalClosureTime / unitTime;
+    oldTime = millis();
+    totalClosureTime = 0; //初期化
+
+    // 分類1(集中しているかどうかだけ)
+    //if (closureRate <= 0.10) {
+    //  c = "good";
+    //  println("集中している");
+    //} else {
+    //  c = "bad";
+    //  println("集中していない");
+    //}
+
+
+
+    // 分類2(集中度を勝手にだいたい数値化したもの)
+    //  int concentrationRate;
+    //  if (closureRate <= 0.10) {
+    //    concentrationRate = (int) map(closureRate, 0, 0.10, 100, 30);
+    //  } else {
+    //    concentrationRate = 20;
+    //  }
+    //  c = Integer.toString(concentrationRate);
+    //  println(concentrationRate);
+    //}
+
+    //分類3 固定値0%, 25%, 50%, 75%, 100%したもの
+    int concentrationRate;
+    if (closureRate >= 0.10) {
+      concentrationRate = 25;
+    } else if (closureRate >= 0.08) {
+      concentrationRate = 50;
+    } else if (closureRate >= 0.05) {
+      concentrationRate = 75;
+    } else {
+      concentrationRate = 100;
+    }
+    c = Integer.toString(concentrationRate);
+    println(closureRate);
+  }
+}
